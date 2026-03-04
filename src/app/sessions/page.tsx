@@ -66,6 +66,19 @@ export default function SessionsPage() {
       const session = await res.json();
       router.push(`/session/${session.id}`);
     } else if (res.status === 403) {
+      const priceId = process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID;
+      if (priceId) {
+        const checkoutRes = await fetch("/api/stripe/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ priceId }),
+        });
+        if (checkoutRes.ok) {
+          const { url } = await checkoutRes.json();
+          if (url) window.location.href = url;
+          return;
+        }
+      }
       alert("Free session limit reached. Please upgrade to continue.");
     }
     setCreating(false);
