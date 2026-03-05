@@ -117,30 +117,30 @@ function checkCompound(line: TranscriptLine): HeuristicResult {
     }
   }
 
+  const auxMatches = text.match(new RegExp(COMPOUND_AND_AUX.source, "gi"));
+  if (auxMatches && auxMatches.length >= 1 && text.length > 60) {
+    return result(
+      true,
+      "compound",
+      0.88,
+      text,
+      "Object to form -- compound.",
+      "FORM"
+    );
+  }
+
   if (COMPOUND_AND_WHAT.test(text)) {
     const parts = text.split(COMPOUND_AND_WHAT);
     if (parts.length >= 2 && parts[0].trim().length > 20) {
       return result(
         true,
         "compound",
-        0.82,
+        0.88,
         text,
         "Object to form -- compound.",
         "FORM"
       );
     }
-  }
-
-  const auxMatches = text.match(new RegExp(COMPOUND_AND_AUX.source, "gi"));
-  if (auxMatches && auxMatches.length >= 1 && text.length > 60) {
-    return result(
-      true,
-      "compound",
-      0.86,
-      text,
-      "Object to form -- compound.",
-      "FORM"
-    );
   }
 
   return noFire("compound");
@@ -258,13 +258,19 @@ function checkAssumes(
         ""
       );
 
+      const STOP_WORDS = new Set([
+        "the", "a", "an", "to", "for", "of", "in", "on", "at", "by",
+        "from", "about", "with", "and", "or", "but", "not", "that",
+        "this", "it", "its", "his", "her", "our", "your", "their",
+      ]);
+
       const wordsAfterVerb = text
         .toLowerCase()
         .slice(text.toLowerCase().indexOf(actionVerb) + actionVerb.length)
         .trim()
         .split(/\s+/)
-        .slice(0, 3)
-        .filter((w) => w.length > 2);
+        .filter((w) => w.length > 2 && !STOP_WORDS.has(w))
+        .slice(0, 3);
 
       const verbInContext = contextText.includes(actionVerb);
       const phraseInContext =
