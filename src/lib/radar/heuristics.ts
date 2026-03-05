@@ -87,6 +87,9 @@ const COMPOUND_MULTI_Q =
 const COMPOUND_AND_WHAT =
   /\b(?:and\s+(?:what|how|when|where|why|who|which|tell\s+us|describe)\b)/i;
 
+const COMPOUND_AND_AUX =
+  /\band\s+(?:did|do|does|can|could|would|will|have|has|are|is|were|was)\s+(?:you|they|he|she|we|it)\b/i;
+
 function checkCompound(line: TranscriptLine): HeuristicResult {
   const text = line.text;
 
@@ -126,6 +129,18 @@ function checkCompound(line: TranscriptLine): HeuristicResult {
         "FORM"
       );
     }
+  }
+
+  const auxMatches = text.match(new RegExp(COMPOUND_AND_AUX.source, "gi"));
+  if (auxMatches && auxMatches.length >= 1 && text.length > 60) {
+    return result(
+      true,
+      "compound",
+      0.86,
+      text,
+      "Object to form -- compound.",
+      "FORM"
+    );
   }
 
   return noFire("compound");
@@ -246,7 +261,7 @@ function checkAssumes(
         return result(
           true,
           "assumes_facts",
-          0.78,
+          0.88,
           text,
           "Object to form -- assumes facts not in evidence.",
           "FORM"
