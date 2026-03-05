@@ -257,7 +257,22 @@ function checkAssumes(
         /^(?:when|after|before|since)\s+you\s+/,
         ""
       );
-      if (!contextText.includes(actionVerb)) {
+
+      const wordsAfterVerb = text
+        .toLowerCase()
+        .slice(text.toLowerCase().indexOf(actionVerb) + actionVerb.length)
+        .trim()
+        .split(/\s+/)
+        .slice(0, 3)
+        .filter((w) => w.length > 2);
+
+      const verbInContext = contextText.includes(actionVerb);
+      const phraseInContext =
+        verbInContext &&
+        wordsAfterVerb.length > 0 &&
+        wordsAfterVerb.some((w) => contextText.includes(w));
+
+      if (!phraseInContext) {
         return result(
           true,
           "assumes_facts",
