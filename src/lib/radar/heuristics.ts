@@ -324,7 +324,7 @@ function checkArgumentative(line: TranscriptLine): HeuristicResult {
       return result(
         true,
         "argumentative",
-        0.76,
+        0.88,
         text,
         "Object to form -- argumentative.",
         "FORM"
