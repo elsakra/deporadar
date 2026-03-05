@@ -153,7 +153,7 @@ function checkMischaracterizes(
         /\bnever\b|\bnot?\b|\bno\b|\bnone\b|\bnothing\b|\bdidn'?t\b|\bwasn'?t\b|\baren'?t\b|\bweren'?t\b/i.test(
           text
         );
-      const conf = hasNegation ? 0.83 : 0.76;
+      const conf = hasNegation ? 0.88 : 0.82;
 
       return result(
         true,
@@ -352,7 +352,7 @@ function checkFoundation(line: TranscriptLine): HeuristicResult {
       return result(
         true,
         "foundation",
-        0.72,
+        0.86,
         text,
         "Object to form -- foundation. Witness has not been qualified.",
         "FORM"
@@ -374,15 +374,47 @@ export function runHeuristics(
   return runChecks(line, context);
 }
 
+const ANSWER_INDICATORS =
+  /^(?:(?:well|yes|no|yeah|right|correct|I|my|we|he|she|they|it|that|the|um|uh|so|okay|ok)\b)/i;
+
+const FIRST_PERSON_STATEMENT =
+  /^(?:I\s+(?:was|am|did|do|have|had|went|saw|called|told|think|believe|remember|don't|didn't|would|could|should|can't|cannot))\b/i;
+
+function looksLikeAnswer(text: string): boolean {
+  const trimmed = text.trim();
+  if (ANSWER_INDICATORS.test(trimmed)) return true;
+  if (FIRST_PERSON_STATEMENT.test(trimmed)) return true;
+  if (!trimmed.endsWith("?") && !/^(?:Q[.:]?\s|did|do|can|could|would|will|have|has|are|is|were|was|who|what|where|when|why|how)\b/i.test(trimmed)) return true;
+  return false;
+}
+
 /**
  * Audio mode: run heuristics regardless of role since speaker detection
  * is unreliable on raw audio. The confidence penalty handles false positives.
+ * For lines that look like answers, skip privilege checks (witnesses
+ * mentioning their own attorney in an answer is not a privilege probe).
  */
 export function runHeuristicsAudio(
   line: TranscriptLine,
   context: TranscriptLine[]
 ): HeuristicResult[] {
   if (line.role === "procedural" || line.role === "objecting") return [];
+
+  if (looksLikeAnswer(line.text)) {
+    // Only run form checks (compound, vague, etc.) — skip privilege
+    // because answer lines mentioning "my attorney" are not objectionable
+    const checks = [
+      checkCompound(line),
+      checkMischaracterizes(line, context),
+      checkVague(line),
+      checkAssumes(line, context),
+      checkAskedAndAnswered(line, context),
+      checkArgumentative(line),
+      checkFoundation(line),
+    ];
+    return checks.filter((r) => r.fired && r.confidence >= CONFIDENCE_FLOOR);
+  }
+
   return runChecks(line, context);
 }
 
