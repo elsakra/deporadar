@@ -374,17 +374,21 @@ export function runHeuristics(
   return runChecks(line, context);
 }
 
-const ANSWER_INDICATORS =
-  /^(?:(?:well|yes|no|yeah|right|correct|I|my|we|he|she|they|it|that|the|um|uh|so|okay|ok)\b)/i;
+const ANSWER_STARTERS =
+  /^(?:(?:well|yes|no|yeah|right|correct|I|my|we|he|she|they|it|um|uh|okay|ok)\b)/i;
 
 const FIRST_PERSON_STATEMENT =
   /^(?:I\s+(?:was|am|did|do|have|had|went|saw|called|told|think|believe|remember|don't|didn't|would|could|should|can't|cannot))\b/i;
 
+const QUESTION_STARTERS =
+  /^(?:so\s+you(?:'re|\s+are)\s+(?:saying|telling)|so\s+(?:your|the)\s+testimony|isn'?t\s+it|you\s+(?:expect|want)|did\s+you|do\s+you|can\s+you|could\s+you|would\s+you|will\s+you|have\s+you|has\s+|are\s+you|is\s+|were\s+you|was\s+|who\s+|what\s+|where\s+|when\s+|why\s+|how\s+)/i;
+
 function looksLikeAnswer(text: string): boolean {
   const trimmed = text.trim();
-  if (ANSWER_INDICATORS.test(trimmed)) return true;
+  if (trimmed.endsWith("?")) return false;
+  if (QUESTION_STARTERS.test(trimmed)) return false;
+  if (ANSWER_STARTERS.test(trimmed)) return true;
   if (FIRST_PERSON_STATEMENT.test(trimmed)) return true;
-  if (!trimmed.endsWith("?") && !/^(?:Q[.:]?\s|did|do|can|could|would|will|have|has|are|is|were|was|who|what|where|when|why|how)\b/i.test(trimmed)) return true;
   return false;
 }
 
