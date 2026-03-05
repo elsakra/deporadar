@@ -272,11 +272,13 @@ function checkAssumes(
         .filter((w) => w.length > 2 && !STOP_WORDS.has(w))
         .slice(0, 3);
 
-      const verbInContext = contextText.includes(actionVerb);
-      const phraseInContext =
-        verbInContext &&
-        wordsAfterVerb.length > 0 &&
-        wordsAfterVerb.some((w) => contextText.includes(w));
+      const answerTexts = answerLines.map((l) => l.text.toLowerCase());
+      const phraseInContext = answerTexts.some(
+        (ans) =>
+          ans.includes(actionVerb) &&
+          wordsAfterVerb.length > 0 &&
+          wordsAfterVerb.some((w) => ans.includes(w))
+      );
 
       if (!phraseInContext) {
         return result(
